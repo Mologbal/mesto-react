@@ -1,6 +1,6 @@
 import React from "react";
 import {apiConfig} from '../utils/Api'
-import Cards from "./Cards";
+import Card from "./Card";
 
 function Main(props) {
     const [userName, setUserName] = React.useState('');
@@ -54,7 +54,7 @@ function Main(props) {
         <section className="elements-container">
             <ul className="elements">
             {card.map((cards) =>(
-                <Cards
+                <Card
                 card={cards}
                 key={cards._id}
                 onCardClick={props.onCardClick}

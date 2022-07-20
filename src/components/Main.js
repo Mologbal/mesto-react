@@ -1,37 +1,29 @@
-import React from "react";
+import {useEffect, useState} from "react";
 import {apiConfig} from '../utils/Api'
 import Card from "./Card";
 
 function Main(props) {
-    const [userName, setUserName] = React.useState('');
-    const [userAvatar, setUserAvatar] = React.useState('');
-    const [userAbout, setUserAbout] = React.useState('');
-    const [card, setCard] = React.useState([]);
+    const [userName, setUserName] = useState('');
+    const [userAvatar, setUserAvatar] = useState('');
+    const [userAbout, setUserAbout] = useState('');
+    const [card, setCard] = useState([]);
 
-    React.useEffect(() => {
+    useEffect(() => {
         apiConfig.getUserInfo()
         .then((res) => {
             setUserName(res.name);
             setUserAvatar(res.avatar);
             setUserAbout(res.about);
+        apiConfig.getInitialCards()
+        .then((res) => {
+            setCard(res)
+        })
         })
         .catch((err) => {
             console.log(`Ошибка: ${err}`)
         })
     }, []);
-
-    React.useEffect(() => {
-        apiConfig.getInitialCards()
-        .then((res) => {
-            setCard(res)
-        })
-        .catch((err) => {
-            console.log(`Ошибка: ${err}`)   
-        })
-    });
-
-
-
+    
     return (
         <main className="main">
 
@@ -59,7 +51,7 @@ function Main(props) {
                 key={cards._id}
                 onCardClick={props.onCardClick}
                 />
-            ))}
+            ))}  {/* постарался примернить деструктуризацию в Cards, onCardClick принимает только {props.onCardClick} хотя пропса вобще больше нет в Card, как это работает сам не понял, верно ли это выше? */}
             </ul>
         </section>
 

@@ -1,5 +1,3 @@
-import React from "react";
-
 function PopupWithForm(props) {
     let PopupOpen = props.open ? 'popup_enable': ``;
     return (
@@ -10,7 +8,7 @@ function PopupWithForm(props) {
             <form className="popup__placeholder" name="popup__form" noValidate>
             {props.children}
                 <button className="popup__save-button" id="saveProfile" type="submit"
-                    aria-label="Сохранить">Сохранить</button>
+                    aria-label="Сохранить">{props.buttonText}</button>
             </form>
         </div>
         <div className="popup__overlay"></div>

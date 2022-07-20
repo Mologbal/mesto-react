@@ -1,4 +1,4 @@
-import React from 'react';
+import {useState} from 'react';
 import Header from './Header';
 import Main from './Main';
 import Footer from './Footer';
@@ -6,11 +6,11 @@ import PopupWithForm from './PopupWithForm';
 import ImagePopup from './ImagePopup';
 
 function App() {
-    const [isEditProfilePopupOpen, toggleEditProfilePopup] = React.useState(false);
-    const [isAddPlacePopupOpen, toggleAddPlacePopup] = React.useState(false);
-    const [isEditAvatarPopupOpen, toggleEditAvatarPopup] = React.useState(false);
-    const [isImagePopupOpen, toggleZoomImagePopup] = React.useState(false);
-    const [selectedCard, setSelectedCard] = React.useState(null)
+    const [isEditProfilePopupOpen, toggleEditProfilePopup] = useState(false);
+    const [isAddPlacePopupOpen, toggleAddPlacePopup] = useState(false);
+    const [isEditAvatarPopupOpen, toggleEditAvatarPopup] = useState(false);
+    const [isImagePopupOpen, toggleZoomImagePopup] = useState(false);
+    const [selectedCard, setSelectedCard] = useState(null)
 
 
     function handleEditProfileClick() {
@@ -37,7 +37,7 @@ function App() {
     }
 
     return (
-        <section className='content'> {/* хотелось использовать body, но консоль жалуется на такой тег , пришлось убрать */})
+        <section className='content'> 
         <div className="page">
             <Header/>
             <Main
@@ -53,6 +53,7 @@ function App() {
                 title='Редактировать профиль'
                 open={isEditProfilePopupOpen}
                 close={closeAllPopups}
+                buttonText = 'Сохранить'
                 >
                 <input
                     className="popup__placeholder-input popup__placeholder-input_type_name"
@@ -81,6 +82,7 @@ function App() {
                     title='Обновить аватар'
                     open={isEditAvatarPopupOpen}
                     close={closeAllPopups}
+                    buttonText = 'Сохранить'
                     >
                     <input
                     className="popup__placeholder-input popup__placeholder-input_type_passion"
@@ -97,6 +99,7 @@ function App() {
                     title='Новое место' 
                     open={isAddPlacePopupOpen}
                     close={closeAllPopups}
+                    buttonText = 'Создать'
                     >
                     <input
                     className="popup__placeholder-input popup__placeholder-input_type_name"
@@ -122,15 +125,14 @@ function App() {
                     name='delete'
                     title='Вы уверены?'
                     close={closeAllPopups}
+                    buttonText = 'Да'
                     />
 
-            {/* несколько часов пытался понять почему моё css-свойство transition не желает работать с попапом для картинок, так и не понял :C */}
-            {selectedCard && 
-                <ImagePopup
+            <ImagePopup
                     card={selectedCard}
                     onClose={closeAllPopups}
-                />
-            } 
+            />
+            
         </div>
         </section>
     );

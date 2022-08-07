@@ -2,7 +2,7 @@ import React from "react";
 import PopupWithForm from "./PopupWithForm";
 import { CurrentUserContext } from '../contexts/CurrentUserContext'
 
-function EditProfilePopup (props) {
+function EditProfilePopup ({open, close, onUpdateUser, onOverlayClose, onButtonEsc}) {
     const currentUser = React.useContext(CurrentUserContext);
     const [name, setName] = React.useState('');
     const [about, setAbout] = React.useState('');
@@ -10,9 +10,9 @@ function EditProfilePopup (props) {
     function handleSubmit (e) {
         e.preventDefault();
 
-        props.onUpdateUser({
-            name,
-            about
+        onUpdateUser({
+            name: name,
+            about: about
         });
     };
 
@@ -26,19 +26,30 @@ function EditProfilePopup (props) {
 
     //сохранит введенные данные при повторном открытии попапа-профиля
     React.useEffect(() => {
-        setName(currentUser.name);
-        setAbout(currentUser.about);  
-    }, [ currentUser]);
+        if (open) {
+            setName(currentUser.name);
+            setAbout(currentUser.about);  
+        }    
+    }, [open, currentUser]);
+
+    React.useEffect(() => {
+        if (open) {
+            document.addEventListener('keydown', onButtonEsc)
+            return () => {
+                document.removeEventListener('keydown', onButtonEsc);
+              }
+        }
+    }, [open])
 
     return (
         <PopupWithForm
                 name='profile'
                 title='Редактировать профиль'
-                open={props.open}
-                close={props.close}
+                open={open}
+                close={close}
                 buttonText ='Сохранить'
                 onSubmit={handleSubmit}
-                onOverlayClose={props.onOverlayClose}
+                onOverlayClose={onOverlayClose}
                 >
                 <input
                     className="popup__placeholder-input popup__placeholder-input_type_name"

@@ -1,13 +1,13 @@
 import React from "react";
 import PopupWithForm from "./PopupWithForm";
 
-function EditAvatarPopup(props) {
+function EditAvatarPopup({open, close, onSubmit, onOverlayClose, onButtonEsc}) {
     const ref = React.useRef();
 
     function handleSubmit(e) {
         e.preventDefault()
 
-        props.onSubmit({
+        onSubmit({
             avatar: ref.current.value
         })
     }
@@ -15,18 +15,27 @@ function EditAvatarPopup(props) {
    //очистит поле ввода ссылочки на аватар, на случай если она уже заполнена
     React.useEffect(() => {
         ref.current.value = ''
-    }, [props.open])
+    }, [open])
+
+    React.useEffect(() => {
+        if (open) {
+            document.addEventListener('keydown', onButtonEsc)
+            return () => {
+                document.removeEventListener('keydown', onButtonEsc);
+              }
+        }
+    }, [open])
 
 
     return (
         <PopupWithForm
                     name='avatar'
                     title='Обновить аватар'
-                    open={props.open}
-                    close={props.close}
+                    open={open}
+                    close={close}
                     onSubmit={handleSubmit}
                     buttonText = 'Сохранить'
-                    onOverlayClose={props.onOverlayClose}
+                    onOverlayClose={onOverlayClose}
                     >
                     <input
                     ref={ref}

@@ -1,4 +1,15 @@
-function ImagePopup({card, onClose, onOverlayClose}) {
+import React from "react";
+
+function ImagePopup({card, onClose, onOverlayClose, onButtonEsc}) {
+
+    React.useEffect(() => {
+            document.addEventListener('keydown', onButtonEsc)
+            return () => {
+                document.removeEventListener('keydown', onButtonEsc);
+              }
+    }, [])
+
+
     return (
         <div className={`popup popup_approximation ${card && 'popup_enable'}`} onClick={onOverlayClose}id="popup-approximation">
         <div className="popup__image-container">

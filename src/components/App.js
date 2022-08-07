@@ -14,7 +14,6 @@ function App() {
     const [isEditProfilePopupOpen, toggleEditProfilePopup] = useState(false);
     const [isAddPlacePopupOpen, toggleAddPlacePopup] = useState(false);
     const [isEditAvatarPopupOpen, toggleEditAvatarPopup] = useState(false);
-    const [isImagePopupOpen, toggleZoomImagePopup] = useState(false);
     const [selectedCard, setSelectedCard] = useState(null)
     const [currentUser, setCurrentUser] = useState({});
     const [cards, setCards] = useState([]);
@@ -24,6 +23,9 @@ function App() {
         .then((res) => {
             setCurrentUser(res)
         })
+        .catch((err) => {
+            console.log(`Ошибка: ${err}`)
+        })
         apiConfig.getInitialCards()
         .then((res) => {
             setCards(res)
@@ -31,7 +33,7 @@ function App() {
         .catch((err) => {
             console.log(`Ошибка: ${err}`)
         })
-    }, []); //Не уверен нужны ли тут промисы, ведь багов с тем что корзинка удаления не появилась/появилась у чужого элемента при мне не возникли, а замедлять просто так работу сайта, промисами не хочется.
+    }, []);
 
 
     function handleCardLike(card) {
@@ -40,7 +42,8 @@ function App() {
             
         //запрос на сервер за лайком/снятием лайка
         if (!isLiked) {
-            apiConfig.setLike(card._id).then((newCard) => {
+            apiConfig.setLike(card._id)
+            .then((newCard) => {
                 setCards((state) => state.map((c) => c._id === card._id ? newCard : c));
             })
             .catch((error) => {
@@ -48,7 +51,8 @@ function App() {
             }) 
         }
         else {
-            apiConfig.deleteLike(card._id).then((newCard) => {
+            apiConfig.deleteLike(card._id)
+            .then((newCard) => {
                 setCards((state) => state.map((c) => c._id === card._id ? newCard : c));
             })
             .catch((error) => {
@@ -79,20 +83,12 @@ function App() {
         setSelectedCard(null);
     }
 
-    // *попытка реализовать дополнительно закрытие любого попапа по нажатию на Esc*
-    useEffect(() => {
-        if (isAddPlacePopupOpen || isEditAvatarPopupOpen || isEditProfilePopupOpen || isImagePopupOpen || selectedCard) {
-            function handleEscButton(e) {
-                if (e.key === 'Escape') {
-                    closeAllPopups()
-                }
-            }
-            document.addEventListener('keydown', handleEscButton)
-            return () => {
-                document.removeEventListener('keydown', handleEscButton);
-              }
+    // *фун-я обработчик для эффектов в попапах(передаётся пропсом)
+    function handleEscButton(e) {
+        if (e.key === 'Escape') {
+            closeAllPopups()
         }
-    }, [isAddPlacePopupOpen, isEditAvatarPopupOpen, isEditProfilePopupOpen, isImagePopupOpen, selectedCard])
+    }
 
     // *попытка реализовать дополнительно закрытие любого попапа по клику на оверлей(через пропс)
     function handleCloseOverlay(e) {
@@ -138,11 +134,13 @@ function App() {
 
     //запрос на сервер за добавлением карточки
     function handleAddPlaceSubmit(data) {
-        apiConfig.addCard(data).then((newCard) => {
+        apiConfig.addCard(data)
+        .then((newCard) => {
           setCards([newCard, ...cards]);
           closeAllPopups();
-        }).catch((err) => {
-          console.error(err);
+        })
+        .catch((error) => {
+            console.log(`Ошибка: ${error}`)
         });
       }  {/* //Todoo хорошо бы реализовать свою валидацию а не просто встроеную */}
 
@@ -167,6 +165,7 @@ function App() {
                 close={closeAllPopups}
                 onUpdateUser={handleUpdateUser}
                 onOverlayClose={handleCloseOverlay}
+                onButtonEsc={handleEscButton}
                 />
 
             <EditAvatarPopup
@@ -174,6 +173,7 @@ function App() {
                 close={closeAllPopups}
                 onSubmit={handleUpdateAvatar}
                 onOverlayClose={handleCloseOverlay}
+                onButtonEsc={handleEscButton}
                 />
 
            <AddPlacePopup
@@ -181,12 +181,14 @@ function App() {
                 close={closeAllPopups}
                 onSubmit={handleAddPlaceSubmit}
                 onOverlayClose={handleCloseOverlay}
+                onButtonEsc={handleEscButton}
                 />
 
             <ImagePopup
                     card={selectedCard}
                     onClose={closeAllPopups}
                     onOverlayClose={handleCloseOverlay}
+                    onButtonEsc={handleEscButton}
             />
 
             {/* //Todoo сделать попап подтверждения удаления карточки */}

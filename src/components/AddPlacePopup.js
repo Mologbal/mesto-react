@@ -2,7 +2,7 @@ import React from "react";
 import PopupWithForm from "./PopupWithForm";
 import { CurrentUserContext } from "../contexts/CurrentUserContext";
 
-function AddPlacePopup(props) {
+function AddPlacePopup({open, close, onSubmit, onOverlayClose, onButtonEsc}) {
     const currentUser = React.useContext(CurrentUserContext);
     const [place, setPlace] = React.useState('');
     const [link, setLink] = React.useState('');
@@ -18,7 +18,7 @@ function AddPlacePopup(props) {
     function handleSubmit (e) {
         e.preventDefault();
 
-        props.onSubmit({
+        onSubmit({
             name: place,
             link: link
         });
@@ -28,18 +28,28 @@ function AddPlacePopup(props) {
     React.useEffect(() => {
         setPlace('');
         setLink('');
-    }, [props.open])
+    }, [open])
+
+    //закроет по нажатию на Esc
+    React.useEffect(() => {
+        if (open) {
+            document.addEventListener('keydown', onButtonEsc)
+            return () => {
+                document.removeEventListener('keydown', onButtonEsc);
+              }
+        }
+    }, [open])
 
 
     return (
         <PopupWithForm 
         name='cards' 
         title='Новое место' 
-        open={props.open}
-        close={props.close}
+        open={open}
+        close={close}
         buttonText = 'Создать'
         onSubmit={handleSubmit}
-        onOverlayClose = {props.onOverlayClose}
+        onOverlayClose = {onOverlayClose}
         >
         <input
         value={place}

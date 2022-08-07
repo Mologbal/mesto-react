@@ -1,6 +1,6 @@
-function ImagePopup({card, onClose}) {
+function ImagePopup({card, onClose, onOverlayClose}) {
     return (
-        <div className={`popup popup_approximation ${card && 'popup_enable'}`} id="popup-approximation">
+        <div className={`popup popup_approximation ${card && 'popup_enable'}`} onClick={onOverlayClose}id="popup-approximation">
         <div className="popup__image-container">
             <button className="popup__close-button popup__close-button_ap" id="popup-approximation-close-button"
                 type="button" aria-label="Закрыть" onClick={onClose}/>

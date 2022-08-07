@@ -1,9 +1,14 @@
-import {useState} from 'react';
+import {useState, useEffect} from 'react';
 import Header from './Header';
 import Main from './Main';
 import Footer from './Footer';
 import PopupWithForm from './PopupWithForm';
 import ImagePopup from './ImagePopup';
+import { CurrentUserContext } from '../contexts/CurrentUserContext';
+import { apiConfig } from '../utils/Api';
+import EditProfilePopup from './EditProfilePopup ';
+import EditAvatarPopup from './EditAvatarPopup';
+import AddPlacePopup from './AddPlacePopup';
 
 function App() {
     const [isEditProfilePopupOpen, toggleEditProfilePopup] = useState(false);
@@ -11,20 +16,62 @@ function App() {
     const [isEditAvatarPopupOpen, toggleEditAvatarPopup] = useState(false);
     const [isImagePopupOpen, toggleZoomImagePopup] = useState(false);
     const [selectedCard, setSelectedCard] = useState(null)
+    const [currentUser, setCurrentUser] = useState({});
+    const [cards, setCards] = useState([]);
+
+    useEffect(() => {
+        apiConfig.getUserInfo()
+        .then((res) => {
+            setCurrentUser(res)
+        })
+        apiConfig.getInitialCards()
+        .then((res) => {
+            setCards(res)
+        })
+        .catch((err) => {
+            console.log(`Ошибка: ${err}`)
+        })
+    }, []); //Не уверен нужны ли тут промисы, ведь багов с тем что корзинка удаления не появилась/появилась у чужого элемента при мне не возникли, а замедлять просто так работу сайта, промисами не хочется.
 
 
+    function handleCardLike(card) {
+        // проверим на предмет лайка от пользователя ранее
+        const isLiked = card.likes.some(i => i._id === currentUser._id);
+            
+        //запрос на сервер за лайком/снятием лайка
+        if (!isLiked) {
+            apiConfig.setLike(card._id).then((newCard) => {
+                setCards((state) => state.map((c) => c._id === card._id ? newCard : c));
+            })
+            .catch((error) => {
+                console.log(`Ошибка: ${error}`)
+            }) 
+        }
+        else {
+            apiConfig.deleteLike(card._id).then((newCard) => {
+                setCards((state) => state.map((c) => c._id === card._id ? newCard : c));
+            })
+            .catch((error) => {
+                console.log(`Ошибка: ${error}`)
+            })
+        }
+    }
+
+    // открывашки попапов
     function handleEditProfileClick() {
         toggleEditProfilePopup(true);
     }
-
     function handleAddPlaceClick() {
         toggleAddPlacePopup(true);
     }
-
     function handleEditAvatarClick() {
         toggleEditAvatarPopup(true);
     }
+    function handleCardClick(card) {
+        setSelectedCard(card)
+    }
 
+    //закроет все попапы
     function closeAllPopups() {
         toggleEditProfilePopup(false);
         toggleAddPlacePopup(false);
@@ -32,109 +79,121 @@ function App() {
         setSelectedCard(null);
     }
 
-    function handleCardClick(card) {
-        setSelectedCard(card)
+    // *попытка реализовать дополнительно закрытие любого попапа по нажатию на Esc*
+    useEffect(() => {
+        if (isAddPlacePopupOpen || isEditAvatarPopupOpen || isEditProfilePopupOpen || isImagePopupOpen || selectedCard) {
+            function handleEscButton(e) {
+                if (e.key === 'Escape') {
+                    closeAllPopups()
+                }
+            }
+            document.addEventListener('keydown', handleEscButton)
+            return () => {
+                document.removeEventListener('keydown', handleEscButton);
+              }
+        }
+    }, [isAddPlacePopupOpen, isEditAvatarPopupOpen, isEditProfilePopupOpen, isImagePopupOpen, selectedCard])
+
+    // *попытка реализовать дополнительно закрытие любого попапа по клику на оверлей(через пропс)
+    function handleCloseOverlay(e) {
+        if (e.target === e.currentTarget) {
+            closeAllPopups();
+        }
     }
 
+    //запрос на сервер за данными о профиле юзера
+    function handleUpdateUser(user) {
+        apiConfig.editUserInfo(user)
+        .then((newUser) => {
+            setCurrentUser(newUser);
+            closeAllPopups();
+        })
+        .catch((error) => {
+            console.log(`Ошибка: ${error}`)
+        })
+    }  {/* //Todoo реализовать интерактивное изменение текста кнопки сабмита, для пользователей с плохим интернетом */}
+
+    //запрос на сервер за удалением карточки
+     function handleCardDelete(card) {
+        apiConfig.deleteCard(card._id)
+        .then(() => {
+            setCards((items) => items.filter((c) => c._id !== card._id && c))
+        })
+        .catch((error) => {
+            console.log(`Ошибка: ${error}`)
+        })
+    }
+
+    //запрос на сервер за аватаркой юзера
+    function handleUpdateAvatar(avatar) {
+        apiConfig.editAvatar(avatar)
+        .then((newAvatar) => {
+            setCurrentUser(newAvatar);
+            closeAllPopups();
+        })
+        .catch((error) => {
+            console.log(`Ошибка: ${error}`)
+        })
+    }
+
+    //запрос на сервер за добавлением карточки
+    function handleAddPlaceSubmit(data) {
+        apiConfig.addCard(data).then((newCard) => {
+          setCards([newCard, ...cards]);
+          closeAllPopups();
+        }).catch((err) => {
+          console.error(err);
+        });
+      }  {/* //Todoo хорошо бы реализовать свою валидацию а не просто встроеную */}
+
     return (
+        <CurrentUserContext.Provider value={currentUser}>
         <section className='content'> 
         <div className="page">
             <Header/>
             <Main
+                card={cards}
                 onEditProfile={handleEditProfileClick}
                 onEditAvatar={handleEditAvatarClick}
                 onAddPlace={handleAddPlaceClick}
                 onCardClick={handleCardClick}
+                onCardLike={handleCardLike}
+                onCardDelete={handleCardDelete}
                 />
             <Footer/>
 
-            <PopupWithForm
-                name='profile'
-                title='Редактировать профиль'
+            <EditProfilePopup
                 open={isEditProfilePopupOpen}
                 close={closeAllPopups}
-                buttonText = 'Сохранить'
-                >
-                <input
-                    className="popup__placeholder-input popup__placeholder-input_type_name"
-                    id="name"
-                    type="text"
-                    name="name"
-                    placeholder="Имя"
-                    minLength="2"
-                    maxLength="40"
-                    required="required"/>
-                <span id="error-name" className="popup__error"></span>
-                <input
-                    className="popup__placeholder-input popup__placeholder-input_type_passion"
-                    id="passion"
-                    type="text"
-                    name="about"
-                    placeholder="Профессиональная деятельность"
-                    minLength="2"
-                    maxLength="200"
-                    required="required"/>
-                <span id="error-passion" className="popup__error"></span>
-            </PopupWithForm>
+                onUpdateUser={handleUpdateUser}
+                onOverlayClose={handleCloseOverlay}
+                />
 
-            <PopupWithForm
-                    name='avatar'
-                    title='Обновить аватар'
-                    open={isEditAvatarPopupOpen}
-                    close={closeAllPopups}
-                    buttonText = 'Сохранить'
-                    >
-                    <input
-                    className="popup__placeholder-input popup__placeholder-input_type_passion"
-                    id="avatar"
-                    type="url"
-                    placeholder="Ссылка на картинку"
-                    name="avatar"
-                    required="required"/>
-                <span id="error-avatar" className="popup__error"></span>
-            </PopupWithForm>
+            <EditAvatarPopup
+                open={isEditAvatarPopupOpen}
+                close={closeAllPopups}
+                onSubmit={handleUpdateAvatar}
+                onOverlayClose={handleCloseOverlay}
+                />
 
-            <PopupWithForm 
-                    name='cards' 
-                    title='Новое место' 
-                    open={isAddPlacePopupOpen}
-                    close={closeAllPopups}
-                    buttonText = 'Создать'
-                    >
-                    <input
-                    className="popup__placeholder-input popup__placeholder-input_type_name"
-                    id="place"
-                    type="text"
-                    placeholder="Название"
-                    name="name"
-                    minLength="2"
-                    maxLength="30"
-                    required="required"/>
-                <span id="error-place" className="popup__error"></span>
-                    <input
-                    className="popup__placeholder-input popup__placeholder-input_type_passion"
-                    id="link"
-                    type="url"
-                    placeholder="Ссылка на картинку"
-                    name="link"
-                    required="required"/>
-                <span id="error-link" className="popup__error"></span>
-            </PopupWithForm>
-
-            <PopupWithForm
-                    name='delete'
-                    title='Вы уверены?'
-                    close={closeAllPopups}
-                    buttonText = 'Да'
-                    />
+           <AddPlacePopup
+                open={isAddPlacePopupOpen}
+                close={closeAllPopups}
+                onSubmit={handleAddPlaceSubmit}
+                onOverlayClose={handleCloseOverlay}
+                />
 
             <ImagePopup
                     card={selectedCard}
                     onClose={closeAllPopups}
+                    onOverlayClose={handleCloseOverlay}
             />
+
+            {/* //Todoo сделать попап подтверждения удаления карточки */}
             
         </div>
         </section>
+        </CurrentUserContext.Provider>
     );
 }
 

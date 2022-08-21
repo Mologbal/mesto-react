@@ -20,7 +20,7 @@ function PopupWithForm({children, open, onButtonEsc, name, onOverlayClose, close
             <h2 className="popup__title">{title}</h2>
             <form className="popup__placeholder" name="popup__form" onSubmit={onSubmit}>
             {children}
-                <button className="popup__save-button" id="saveProfile" type="submit"
+                <button className="popup__save-button"  type="submit"
                     aria-label="Сохранить">{buttonText}</button>
             </form>
         </div>
